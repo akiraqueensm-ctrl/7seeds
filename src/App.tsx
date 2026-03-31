@@ -7,12 +7,7 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { 
-  Float, 
-  MeshDistortMaterial, 
   PerspectiveCamera, 
-  Environment,
-  Text,
-  Float as FloatDrei
 } from '@react-three/drei';
 import * as THREE from 'three';
 import { 
@@ -28,72 +23,14 @@ import {
   Info,
   HelpCircle,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Eye,
+  Shield,
+  Key,
+  ChevronUp
 } from 'lucide-react';
 
 // --- 3D Components ---
-
-const Tunnel = () => {
-  const groupRef = useRef<THREE.Group>(null);
-  
-  const rings = React.useMemo(() => {
-    const temp = [];
-    for (let i = 0; i < 20; i++) {
-      temp.push({
-        z: -i * 4,
-        rotation: Math.random() * Math.PI,
-        scale: 1 + Math.random() * 0.5
-      });
-    }
-    return temp;
-  }, []);
-
-  useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.position.z = (state.clock.getElapsedTime() * 2) % 4;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {rings.map((ring, i) => (
-        <mesh key={i} position={[0, 0, ring.z]} rotation={[0, 0, ring.rotation]} scale={ring.scale}>
-          <ringGeometry args={[3.5, 4, 4, 1]} />
-          <meshBasicMaterial color="#00ff88" transparent opacity={0.1 - (i * 0.005)} wireframe />
-        </mesh>
-      ))}
-    </group>
-  );
-};
-
-const MysteriousObject = () => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x = state.clock.getElapsedTime() * 0.2;
-      meshRef.current.rotation.y = state.clock.getElapsedTime() * 0.3;
-      meshRef.current.position.y = Math.sin(state.clock.getElapsedTime()) * 0.2;
-    }
-  });
-
-  return (
-    <Float speed={2} rotationIntensity={1} floatIntensity={2}>
-      <mesh ref={meshRef}>
-        <icosahedronGeometry args={[1.5, 1]} />
-        <MeshDistortMaterial 
-          color="#00ff88" 
-          speed={4} 
-          distort={0.6} 
-          radius={1} 
-          emissive="#00ff88"
-          emissiveIntensity={1}
-          wireframe
-        />
-      </mesh>
-    </Float>
-  );
-};
 
 const Particles = ({ count = 300 }) => {
   const points = useRef<THREE.Points>(null);
@@ -131,25 +68,13 @@ const Particles = ({ count = 300 }) => {
   );
 };
 
-const TunnelScene = () => {
-  return (
-    <div className="absolute inset-0 z-0">
-      <Canvas>
-        <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-        <ambientLight intensity={0.1} />
-        <pointLight position={[0, 0, 2]} intensity={2} color="#00ff88" />
-        <Suspense fallback={null}>
-          <Tunnel />
-          <MysteriousObject />
-          <Particles count={400} />
-          <Environment preset="night" />
-        </Suspense>
-      </Canvas>
-      <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
-      <div className="absolute inset-0 bg-radial-gradient from-transparent to-black opacity-60" />
-    </div>
-  );
-};
+const StaticTunnelBackground = () => (
+  <div className="absolute inset-0 z-0 overflow-hidden">
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,136,0.05)_0%,transparent_70%)]" />
+    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-[0.1] grayscale mix-blend-overlay" />
+    <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
+  </div>
+);
 
 // --- Components ---
 
@@ -200,6 +125,45 @@ const Scanline = () => (
   <div className="scanline fixed inset-0 z-[98] pointer-events-none" />
 );
 
+const Vignette = () => (
+  <div className="fixed inset-0 pointer-events-none z-[101] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_70%,rgba(0,0,0,0.8)_100%)]" />
+);
+
+const Flashlight = () => {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none z-[97] mix-blend-soft-light opacity-60"
+      style={{
+        background: `radial-gradient(circle 400px at ${mousePos.x}px ${mousePos.y}px, rgba(0, 255, 136, 0.15), transparent 80%)`
+      }}
+    />
+  );
+};
+
+const DustScratches = () => (
+  <div className="fixed inset-0 pointer-events-none z-[102] overflow-hidden opacity-[0.03]">
+    <motion.div 
+      animate={{ 
+        x: [-10, 10, -5, 5, 0],
+        y: [-10, 5, 10, -5, 0],
+        opacity: [0.1, 0.3, 0.1, 0.4, 0.1]
+      }}
+      transition={{ duration: 0.2, repeat: Infinity, ease: "linear" }}
+      className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] scale-150"
+    />
+  </div>
+);
+
 const GlitchOverlay = () => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -222,6 +186,108 @@ const GlitchOverlay = () => {
       <div className="absolute top-1/4 left-0 w-full h-px bg-red-500 shadow-[0_0_10px_red]" style={{ transform: `translateY(${Math.random() * 100}vh)` }} />
       <div className="absolute top-3/4 left-0 w-full h-px bg-blue-500 shadow-[0_0_10px_blue]" style={{ transform: `translateY(${Math.random() * 100}vh)` }} />
     </div>
+  );
+};
+
+const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState("INITIALIZING_SYSTEM...");
+
+  useEffect(() => {
+    const statuses = [
+      "ESTABLISHING_SECURE_LINK...",
+      "DECRYPTING_SECTOR_7_DATA...",
+      "BYPASSING_FIREWALL...",
+      "RECOVERING_FRAGMENTED_LOGS...",
+      "SIGNAL_STABILIZED.",
+      "ACCESS_GRANTED."
+    ];
+
+    let currentStatus = 0;
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(onComplete, 1000);
+          return 100;
+        }
+        if (prev % 20 === 0 && currentStatus < statuses.length - 1) {
+          currentStatus++;
+          setStatus(statuses[currentStatus]);
+        }
+        return prev + 1;
+      });
+    }, 40);
+
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  return (
+    <div className="fixed inset-0 z-[1000] bg-black flex flex-col items-center justify-center p-12 font-mono">
+      <div className="max-w-md w-full">
+        <div className="flex justify-between items-end mb-4">
+          <div className="space-y-1">
+            <div className="text-accent text-xs tracking-[0.4em] animate-pulse">{status}</div>
+            <div className="text-white/20 text-[10px] tracking-widest">STATION_ID: ALPHA_SECTOR_7</div>
+          </div>
+          <div className="text-accent text-2xl font-black">{progress}%</div>
+        </div>
+        <div className="h-1 w-full bg-white/5 relative overflow-hidden">
+          <motion.div 
+            className="absolute top-0 left-0 h-full bg-accent shadow-[0_0_20px_rgba(0,255,136,0.5)]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="mt-12 grid grid-cols-4 gap-4 opacity-20">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className={`h-1 bg-accent ${progress > (i * 8) ? 'opacity-100' : 'opacity-0'}`} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SystemAlert = () => {
+  const [alert, setAlert] = useState<string | null>(null);
+
+  useEffect(() => {
+    const alerts = [
+      "UNAUTHORIZED_ACCESS_DETECTED",
+      "ENCRYPTION_KEY_EXPIRED",
+      "PACKET_LOSS_IN_SECTOR_4",
+      "FRAGMENTED_MEMORY_RECOVERED",
+      "THE_ROOTS_ARE_WATCHING",
+      "DEPTH_THRESHOLD_EXCEEDED"
+    ];
+
+    const trigger = () => {
+      if (Math.random() > 0.95) {
+        setAlert(alerts[Math.floor(Math.random() * alerts.length)]);
+        setTimeout(() => setAlert(null), 3000);
+      }
+    };
+
+    const interval = setInterval(trigger, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {alert && (
+        <motion.div 
+          initial={{ opacity: 0, x: 100 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 100 }}
+          className="fixed top-32 right-12 z-[150] bg-red-950/80 border border-red-500/50 p-4 backdrop-blur-md font-mono"
+        >
+          <div className="flex items-center gap-4 text-red-500">
+            <div className="w-2 h-2 bg-red-500 rounded-full animate-ping" />
+            <span className="text-[10px] tracking-[0.3em] font-bold uppercase">System_Alert: {alert}</span>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
@@ -276,30 +342,49 @@ const Terminal = ({ lines }: { lines: string[] }) => {
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [signal, setSignal] = useState(4);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    
+    const interval = setInterval(() => {
+      setSignal(Math.floor(Math.random() * 2) + 3);
+    }, 3000);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearInterval(interval);
+    };
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-black/80 backdrop-blur-md py-4' : 'bg-transparent py-8'}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-black/80 backdrop-blur-md py-4 border-b border-white/5' : 'bg-transparent py-8'}`}>
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center">
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-8 bg-accent rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(0,255,136,0.3)]">
             <span className="text-black font-bold text-xs">7S</span>
           </div>
-          <span className="font-display font-bold text-xl tracking-tighter">SEVENTH SEEDS</span>
+          <div className="flex flex-col">
+            <span className="font-display font-bold text-xl tracking-tighter leading-none">SEVENTH SEEDS</span>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex gap-0.5">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} className={`w-0.5 h-2 ${i <= signal ? 'bg-accent' : 'bg-white/10'}`} />
+                ))}
+              </div>
+              <span className="text-[8px] font-mono text-accent/60 uppercase tracking-widest">Signal_Stable</span>
+            </div>
+          </div>
         </div>
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/70">
-          <a href="#about" className="hover:text-accent transition-colors">About</a>
-          <a href="#how-it-works" className="hover:text-accent transition-colors">How it Works</a>
-          <a href="#reward" className="hover:text-accent transition-colors">Reward</a>
-          <a href="#faq" className="hover:text-accent transition-colors">FAQ</a>
-          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-white/10 rounded-full hover:bg-white/20 transition-all flex items-center gap-2">
-            <Youtube size={16} />
-            Watch Now
+        <div className="hidden md:flex items-center gap-8 text-[10px] font-mono tracking-[0.2em] uppercase text-white/50">
+          <a href="#about" className="hover:text-accent transition-colors">01_About</a>
+          <a href="#how-it-works" className="hover:text-accent transition-colors">02_Protocol</a>
+          <a href="#reward" className="hover:text-accent transition-colors">03_Reward</a>
+          <a href="#faq" className="hover:text-accent transition-colors">04_FAQ</a>
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="px-6 py-2 bg-accent/10 border border-accent/20 rounded-full hover:bg-accent/20 transition-all flex items-center gap-3 text-accent">
+            <Youtube size={14} />
+            Watch_Feed
           </a>
         </div>
       </div>
@@ -318,37 +403,53 @@ const RedactedText = ({ children }: { children: React.ReactNode }) => (
 const SectionHeading = ({ children, subtitle, number }: { children: React.ReactNode, subtitle?: string, number?: string }) => (
   <div className="mb-32 relative">
     {number && (
-      <motion.span 
+      <motion.div 
         initial={{ opacity: 0, x: -20 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
-        className="absolute -left-12 top-0 text-accent font-mono text-xs tracking-[0.5em] vertical-text hidden lg:block"
+        className="absolute -left-16 top-0 flex flex-col items-center gap-4 hidden lg:flex"
       >
-        SECTION_{number}
-      </motion.span>
+        <span className="text-accent font-mono text-[10px] tracking-[0.5em] vertical-text uppercase opacity-50">
+          SECTION_{number}
+        </span>
+        <div className="w-px h-24 bg-accent/20" />
+      </motion.div>
     )}
-    <motion.h2 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-      className="text-6xl md:text-9xl font-display font-black mb-8 tracking-tighter uppercase leading-[0.8]"
+      className="relative"
     >
-      {children}
-    </motion.h2>
+      <h2 className="text-6xl md:text-9xl font-display font-black mb-8 tracking-tighter uppercase leading-[0.8] glow-text">
+        {children}
+      </h2>
+      <div className="absolute -top-4 -left-4 w-8 h-8 border-t-2 border-l-2 border-accent/30" />
+    </motion.div>
     {subtitle && (
       <motion.p 
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ delay: 0.3, duration: 1 }}
-        className="text-white/30 max-w-2xl text-xl md:text-2xl font-serif italic leading-tight tracking-tight"
+        className="text-white/40 max-w-2xl text-xl md:text-2xl font-serif italic leading-tight tracking-tight border-l-2 border-accent/10 pl-8 mt-8"
       >
         {subtitle}
       </motion.p>
     )}
-    <div className="h-px w-full bg-white/5 mt-12" />
   </div>
+);
+
+const ClassifiedStamp = () => (
+  <motion.div 
+    initial={{ opacity: 0, scale: 1.5, rotate: -20 }}
+    whileInView={{ opacity: 0.2, scale: 1, rotate: -15 }}
+    viewport={{ once: true }}
+    className="absolute top-20 right-20 border-4 border-red-900 text-red-900 px-8 py-4 font-black text-4xl tracking-[0.2em] uppercase select-none pointer-events-none mix-blend-multiply"
+  >
+    CLASSIFIED
+  </motion.div>
 );
 
 const FAQItem = ({ question, answer }: { question: string, answer: React.ReactNode }) => {
@@ -463,11 +564,21 @@ const NetworkScene = () => (
 // --- Main App ---
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <div className="min-h-screen font-sans selection:bg-accent selection:text-black bg-black text-white">
+      <AnimatePresence>
+        {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+      </AnimatePresence>
+
       <CrtEffect />
       <NoiseOverlay />
+      <Vignette />
+      <Flashlight />
+      <DustScratches />
       <GlitchOverlay />
+      <SystemAlert />
       <Navbar />
       
       <motion.button
@@ -485,7 +596,7 @@ export default function App() {
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 overflow-hidden">
         <Scanline />
-        <TunnelScene />
+        <StaticTunnelBackground />
         
         {/* Background Elements Overlays */}
         <div className="absolute inset-0 z-1 pointer-events-none">
@@ -535,7 +646,7 @@ export default function App() {
             </motion.div>
 
             <div className="relative inline-block mb-12">
-              <h1 className="text-6xl md:text-9xl lg:text-[13rem] font-display font-black leading-[0.75] tracking-tighter uppercase italic">
+              <h1 className="text-6xl md:text-9xl lg:text-[13rem] font-display font-black leading-[0.75] tracking-tighter uppercase italic glow-text">
                 <GlitchText text="THE ROOTS" /> <br />
                 <span className="text-accent not-italic">RUN DEEPER</span> <br />
                 <span className="text-white/10">THAN CONCRETE.</span>
@@ -601,6 +712,7 @@ export default function App() {
 
       {/* About Section - Dossier Style */}
       <section id="about" className="py-80 relative border-t border-white/5 overflow-hidden">
+        <ClassifiedStamp />
         <div className="absolute top-0 right-0 w-1/2 h-full bg-accent/[0.02] -skew-x-12 translate-x-1/4 pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="grid lg:grid-cols-12 gap-24 items-start">
@@ -668,26 +780,31 @@ export default function App() {
       </section>
 
       {/* How it Works - Technical Grid */}
-      <section id="how-it-works" className="py-80 relative border-t border-white/5 bg-white/[0.01] overflow-hidden">
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-accent/[0.01] skew-y-6 translate-y-1/2 pointer-events-none" />
+      <section id="how-it-works" className="py-80 relative border-t border-white/5 bg-black overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
+          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+        </div>
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <SectionHeading number="02" subtitle="The mystery isn't just in the footage. You must look closer than the average viewer.">
+          <SectionHeading number="02" subtitle="The protocol is simple. The execution is not. Follow the seeds.">
             THE <br /> <GlitchText text="PROTOCOL" />
           </SectionHeading>
           
-          <div className="grid md:grid-cols-3 border-l border-t border-white/5">
+          <div className="grid md:grid-cols-3 border-l border-t border-white/5 mt-32">
             {[
               {
                 title: "DEEP_ANALYSIS",
-                desc: "Clues are scattered everywhere: hidden in video frames, encoded in titles, buried in thumbnails, or pinned in the comments section."
+                desc: "Clues are scattered everywhere: hidden in video frames, encoded in titles, buried in thumbnails, or pinned in the comments section.",
+                icon: <Eye size={32} />
               },
               {
                 title: "ESCALATION",
-                desc: "The first few seeds are simple. As the story progresses, the puzzles become exponentially harder, requiring collaboration."
+                desc: "The first few seeds are simple. As the story progresses, the puzzles become exponentially harder, requiring collaboration.",
+                icon: <TrendingUp size={32} />
               },
               {
                 title: "ZERO_ASSISTANCE",
-                desc: "We do not explain solutions. The community must figure it out together. Every discovery is a step closer."
+                desc: "We do not explain solutions. The community must figure it out together. Every discovery is a step closer.",
+                icon: <Shield size={32} />
               }
             ].map((item, i) => (
               <motion.div 
@@ -696,11 +813,14 @@ export default function App() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.2, duration: 1 }}
-                className="p-20 border-r border-b border-white/5 group hover:bg-accent/[0.03] transition-all duration-700 relative"
+                className="p-20 border-r border-b border-white/5 group hover:bg-accent/[0.03] transition-all duration-700 relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 w-2 h-2 bg-accent/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="text-accent font-mono text-xs mb-16 block tracking-[0.4em]">STEP_0{i+1}</span>
-                <h3 className="text-5xl font-display font-black mb-10 tracking-tighter uppercase leading-none group-hover:text-accent transition-colors">{item.title}</h3>
+                <div className="text-accent/20 group-hover:text-accent transition-colors mb-12 group-hover:scale-110 transition-transform duration-500">
+                  {item.icon}
+                </div>
+                <span className="text-accent font-mono text-[10px] mb-12 block tracking-[0.4em] uppercase">Step_0{i+1} // Active</span>
+                <h3 className="text-5xl font-display font-black mb-10 tracking-tighter uppercase leading-none group-hover:text-accent transition-colors group-hover:glow-text">{item.title}</h3>
                 <p className="text-white/30 leading-[1.1] text-2xl font-serif italic">{item.desc}</p>
               </motion.div>
             ))}
@@ -776,23 +896,36 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="relative p-2 bg-white/5 border border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.5)]"
+              className="relative p-8 bg-white/[0.02] border border-white/10 backdrop-blur-xl shadow-[0_0_100px_rgba(0,0,0,0.5)]"
             >
-              <div className="absolute top-6 left-6 font-mono text-[10px] text-white/30 uppercase tracking-[0.5em]">Vault_Status: [ENCRYPTED]</div>
-              <div className="absolute bottom-6 right-6 font-mono text-[10px] text-white/30 uppercase tracking-[0.5em]">Network: ETH_MAINNET</div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-accent/20" />
+              <div className="flex justify-between items-center mb-12">
+                <div className="font-mono text-[10px] text-white/30 uppercase tracking-[0.5em]">Vault_Status: [ENCRYPTED]</div>
+                <div className="font-mono text-[10px] text-white/30 uppercase tracking-[0.5em]">Network: ETH_MAINNET</div>
+              </div>
               
-              <div className="bg-black p-20 text-center border border-white/10 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
-                <span className="text-accent font-mono text-sm tracking-[0.6em] uppercase mb-12 block relative z-10">Current_Balance</span>
-                <div className="text-8xl md:text-[10rem] font-display font-black text-white tracking-tighter mb-16 leading-none relative z-10">
+              <div className="bg-black/60 p-12 text-center border border-white/5 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,136,0.05)_0%,transparent_70%)]" />
+                <span className="text-accent font-mono text-[10px] tracking-[0.6em] uppercase mb-8 block relative z-10">Current_Balance_Verified</span>
+                <div className="text-7xl md:text-9xl font-display font-black text-white tracking-tighter mb-12 leading-none relative z-10 glow-text">
                   $12,450
                 </div>
-                <div className="text-white/20 text-xs font-mono break-all mb-16 border border-white/10 p-6 bg-white/[0.02] relative z-10">
-                  0x71C765...d8976F
+                <div className="flex items-center justify-center gap-4 mb-12 relative z-10">
+                  <div className="h-px w-8 bg-white/10" />
+                  <div className="text-white/20 text-[10px] font-mono break-all px-4 py-2 border border-white/5 bg-white/[0.01]">
+                    0x71C765...d8976F
+                  </div>
+                  <div className="h-px w-8 bg-white/10" />
                 </div>
-                <button className="relative z-10 w-full py-10 bg-accent text-black font-black text-sm tracking-[0.6em] uppercase hover:bg-white transition-all duration-500 shadow-[0_0_40px_rgba(0,255,136,0.2)]">
+                <button className="relative z-10 w-full py-8 bg-accent text-black font-black text-xs tracking-[0.6em] uppercase hover:bg-white transition-all duration-500 shadow-[0_0_40px_rgba(0,255,136,0.2)]">
                   VERIFY_ON_CHAIN
                 </button>
+              </div>
+              
+              <div className="mt-8 grid grid-cols-3 gap-4">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-1 bg-accent/10" />
+                ))}
               </div>
             </motion.div>
           </div>
@@ -953,41 +1086,62 @@ export default function App() {
       </section>
 
       {/* The Network Section */}
-      <section className="py-80 relative border-t border-white/5 overflow-hidden">
+      <section className="py-80 relative border-t border-white/5 overflow-hidden bg-black">
         <NetworkScene />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none" />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex flex-col items-center text-center">
             <SectionHeading number="04" subtitle="The truth is not a straight line. It is a web of interconnected anomalies.">
               THE <br /> <GlitchText text="NETWORK" />
             </SectionHeading>
-            <div className="grid md:grid-cols-2 gap-16 mt-24 text-left">
-              <div className="p-12 border border-white/5 bg-black/60 backdrop-blur-xl relative group">
+            <div className="grid md:grid-cols-2 gap-16 mt-24 text-left w-full">
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="p-12 border border-white/10 bg-black/40 backdrop-blur-xl relative group overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-accent/20" />
                 <div className="absolute top-0 right-0 p-4 font-mono text-[10px] text-accent/40">NODE_01 // ALPHA</div>
-                <h4 className="text-3xl font-display font-black mb-6 uppercase tracking-tighter text-accent">Cross-Platform Clues</h4>
-                <p className="text-white/40 text-xl font-serif italic leading-tight">
-                  The mystery extends beyond YouTube. Check descriptions, source code of linked sites, and even metadata of shared files. Every byte could be a <RedactedText>seed</RedactedText>.
-                </p>
-              </div>
-              <div className="p-12 border border-white/5 bg-black/60 backdrop-blur-xl relative group">
+                <div className="relative z-10">
+                  <h4 className="text-4xl font-display font-black mb-8 uppercase tracking-tighter text-accent group-hover:glow-text transition-all">Cross-Platform Clues</h4>
+                  <p className="text-white/40 text-2xl font-serif italic leading-tight mb-12">
+                    The mystery extends beyond YouTube. Check descriptions, source code of linked sites, and even metadata of shared files. Every byte could be a <RedactedText>seed</RedactedText>.
+                  </p>
+                  <div className="flex items-center gap-4 opacity-20 group-hover:opacity-100 transition-opacity">
+                    <div className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                    <span className="text-[10px] font-mono tracking-widest uppercase">Scanning_Metadata...</span>
+                  </div>
+                </div>
+              </motion.div>
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                className="p-12 border border-white/10 bg-black/40 backdrop-blur-xl relative group overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 w-full h-1 bg-accent/20" />
                 <div className="absolute top-0 right-0 p-4 font-mono text-[10px] text-accent/40">NODE_02 // BETA</div>
-                <h4 className="text-3xl font-display font-black mb-6 uppercase tracking-tighter text-accent">Community Intelligence</h4>
-                <p className="text-white/40 text-xl font-serif italic leading-tight">
-                  No one person can solve this alone. Join the collective effort. Share your findings, debunk theories, and build the map together. The network is <RedactedText>watching</RedactedText>.
-                </p>
-              </div>
+                <div className="relative z-10">
+                  <h4 className="text-4xl font-display font-black mb-8 uppercase tracking-tighter text-accent group-hover:glow-text transition-all">Community Intelligence</h4>
+                  <p className="text-white/40 text-2xl font-serif italic leading-tight mb-12">
+                    No one person can solve this alone. Join the collective effort. Share your findings, debunk theories, and build the map together. The network is <RedactedText>watching</RedactedText>.
+                  </p>
+                  <div className="flex items-center gap-4 opacity-20 group-hover:opacity-100 transition-opacity">
+                    <div className="w-2 h-2 rounded-full bg-accent animate-ping" />
+                    <span className="text-[10px] font-mono tracking-widest uppercase">Syncing_Collective...</span>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </div>
         </div>
       </section>
 
       {/* FAQ Section - Intelligence Debriefing */}
-      <section id="faq" className="py-80 bg-white/[0.01] border-t border-white/5 relative overflow-hidden">
+      <section id="faq" className="py-80 bg-black border-t border-white/5 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-5 pointer-events-none" />
         <div className="max-w-5xl mx-auto px-6 relative z-10">
-          <SectionHeading subtitle="Everything you need to know before you descend.">
-            INTELLIGENCE <br /> DEBRIEFING
+          <SectionHeading number="05" subtitle="Everything you need to know before you descend.">
+            INTELLIGENCE <br /> <GlitchText text="DEBRIEFING" />
           </SectionHeading>
-          <div className="mt-32 space-y-4">
+          <div className="mt-32 space-y-8">
             <FAQItem 
               question="Is the reward real?" 
               answer={<>Yes. The reward is held in a public USDC wallet (0x71C765...d8976F). You can verify the balance on Etherscan or any other blockchain explorer. The winner will receive the private keys to the wallet or a direct transfer upon providing the correct password. This is <RedactedText>verified</RedactedText>.</>} 
@@ -1008,6 +1162,21 @@ export default function App() {
               question="Can I participate for free?" 
               answer={<>Yes! Watching the videos and solving the puzzles is 100% free. The Graffiti system and donations are optional ways to support the project and increase the prize pool, but they are not required to win. The descent is <RedactedText>open to all</RedactedText>.</>} 
             />
+          </div>
+          
+          <div className="mt-40 p-12 border border-white/10 bg-white/[0.02] relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-1 h-full bg-accent" />
+            <div className="flex items-start gap-8">
+              <div className="p-4 bg-accent/10 text-accent">
+                <Shield size={24} />
+              </div>
+              <div>
+                <h4 className="text-2xl font-display font-black uppercase tracking-tighter mb-4">Integrity_Check</h4>
+                <p className="text-white/30 font-serif italic leading-relaxed">
+                  All clues are generated and verified by the core system. Any attempt to manipulate the network or bypass the protocol will result in immediate <RedactedText>disqualification</RedactedText>. The seeds must be found, not forced.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
